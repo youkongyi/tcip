@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd 
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<!-- 真正可以产生Connection的ConnectionFactory，由对应的 JMS服务厂商提供-->
+	<bean id="targetConnectionFactory" class="org.apache.activemq.spring.ActiveMQConnectionFactory">
+		<property name="brokerURL" value="" />
+		<property name="userName" value="admin" />
+		<property name="password" value="admin" />
+	</bean>
+
+	<!-- 连接池 -->
+	<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+		<property name="connectionFactory" ref="targetConnectionFactory" />
+		<property name="maxConnections" value="100" />
+	</bean>
+	
+	<!-- connctionFactory 信息配置 -->
+	<bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+		<property name="targetConnectionFactory" ref="pooledConnectionFactory" />
+	</bean>
+	
+	<!-- Spring提供的JMS工具类，它可以进行消息发送、接收等 -->  
+	<bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+		 <!-- 这个connectionFactory对应的是我们定义的Spring提供的那个ConnectionFactory对象 --> 
+		<property name="connectionFactory" ref="connectionFactory" />
+		<property name="defaultDestinationName" value="subject"/>
+		<!-- 区别是采用p2p 还是发布/订阅模式 true为：p2p false:p/s-->
+		<property name="pubSubDomain" value="true" />
+	</bean>
+
+	<!-- ####################### 新账单提醒  start###################### -->
+	<!-- 消息监听适配器 --> 
+	<bean id="newBillmessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.NewBillmessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+ 	
+	<!-- 新账单提醒 -->
+	<bean id="destinationNewBill" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="newBill"/>
+	</bean>
+
+ 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationNewBill" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="newBillmessageListenerAdapter" />
+ 	</bean>
+	<!-- ####################### 新账单提醒  end###################### -->
+	
+
+	<!-- ####################### 账单逾期提醒  start###################### -->
+	<bean id="overduemessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.OverduemessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+	<bean id="destinationOverdue" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="overdue"/>
+	</bean>
+
+ 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationOverdue" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="overduemessageListenerAdapter" />
+ 	</bean>
+ 	<!-- ####################### 账单逾期提醒  end###################### -->
+	
+	
+	<!-- ####################### 工单状态变化通知  end###################### -->
+	<bean id="orderChangemessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.OrderChangemessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+	
+	<bean id="destinationOrderChange" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="orderChange"/>
+	</bean>
+ 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationOrderChange" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="orderChangemessageListenerAdapter" />
+ 	</bean>
+ 	<!-- ####################### 工单状态变化通知  end###################### -->
+	
+	
+	<!-- ####################### 银行代扣送扣通知  start###################### -->
+	<bean id="sendWithholdmessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.SendWithholdmessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+	
+	<bean id="destinationSendWithhold" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="sendWithhold"/>
+	</bean>
+ 	 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationSendWithhold" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="sendWithholdmessageListenerAdapter" />
+ 	</bean>
+	<!-- ####################### 银行代扣送扣通知   end###################### -->
+	
+	
+	<!-- ####################### 银行代扣状态通知   start###################### -->
+	
+	<bean id="withholdChangemessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.WithholdChangemessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+	<!-- 银行代扣状态通知 -->
+	<bean id="destinationWithholdChange" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="withholdChange"/>
+	</bean>
+	
+ 	 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationWithholdChange" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="withholdChangemessageListenerAdapter" />
+ 	</bean>	
+	<!-- ####################### 银行代扣状态通知  end###################### -->
+	
+	
+	<!-- ####################### 燃气具销售订单通知   start###################### -->
+	<bean id="gssellordermessageListenerAdapter" class="org.springframework.jms.listener.adapter.MessageListenerAdapter">
+		<constructor-arg>
+			<bean class="com.stech.tcip.event.listener.GssellordermessageListenerAdapter" />
+		</constructor-arg>
+	</bean>
+	<!-- 银行代扣状态通知 -->
+	<bean id="destinationGssellorder" class="org.apache.activemq.command.ActiveMQQueue">
+		<constructor-arg index="0" value="gssellorder"/>
+	</bean>
+	
+ 	 	<!-- 消息监听适配器对应的监听容器 -->
+ 	<bean class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+ 		<property name="connectionFactory" ref="connectionFactory" />
+ 		<property name="destination" ref="destinationGssellorder" />
+ 		<!-- 使用MessageListenerAdapter来作为消息监听器 -->  
+ 		<property name="messageListener" ref="gssellordermessageListenerAdapter" />
+ 	</bean>	
+	<!-- ####################### 燃气具销售订单通知  end###################### -->
+</beans>
