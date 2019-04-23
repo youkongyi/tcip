@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.sys.dao.AppMapper" >
+	<!-- 数据返回对象(应用权限) -->
+	<resultMap type="com.stech.tcip.sys.dto.AppAuthorizes" id="appAuthorizes">
+	    <result column="appid" property="appId" jdbcType="VARCHAR" />
+	    <result column="appname" property="appName" jdbcType="VARCHAR" />
+        <result column="interServiceId" property="interServiceId" jdbcType="VARCHAR" />
+	    <result column="tciscode" property="tciscode" jdbcType="VARCHAR" />
+	    <result column="tcipcode" property="tcipcode" jdbcType="VARCHAR" />
+	    <result column="type" property="type" jdbcType="VARCHAR" />
+	    <result column="name" property="name" jdbcType="VARCHAR" />
+	    <result column="desc" property="desc" jdbcType="VARCHAR" />
+	    <result column="authorizeFlag" property="authorizeFlag" jdbcType="VARCHAR"/>
+	</resultMap>
+   
+  <resultMap id="BaseResultMap" type="com.stech.tcip.sys.pojo.App" >
+    <id column="appid" property="appid" jdbcType="VARCHAR" />
+    <result column="appname" property="appname" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    appid, appname
+  </sql>
+    <select id="selectAllApps" resultMap="BaseResultMap" parameterType="com.stech.tcip.sys.pojo.App" >
+	    select 
+	    <include refid="Base_Column_List" />
+	    from t_ip_app
+  </select>
+  
+  <select id="selectAppAuthorizes" resultMap="appAuthorizes" parameterType="com.stech.tcip.sys.dto.AppAuthorizes" >
+		SELECT
+			a.appid,
+		    b.appname,
+		    IFNULL(a.interfaceid,0) authorizeFlag,
+			t.id interServiceId,
+			t.tciscode,
+			t.tcipcode,
+			t.type,
+			t.`name`,
+			t.`desc`
+		FROM
+			t_ip_interservice t
+		LEFT JOIN (select interfaceid,appid from t_ip_appinterface where appid = #{appId,jdbcType=VARCHAR}) a on t.id = a.interfaceid
+		LEFT JOIN (select appid,appname from t_ip_app where appid = #{appId,jdbcType=VARCHAR}) b on a.appid = b.appid
+		<where>
+	     	   <if test="tciscode != null and tciscode !=''" >
+		        	and t.tciscode like concat(concat('%',#{tciscode}),'%') 
+		      </if>
+		      <if test="tcipcode != null and tcipcode !=''" >
+		         	and t.tciscode like concat(concat('%',#{tcipcode}),'%')
+		      </if>
+		      <if test="type != null and type!=''" >
+		        	and t.type = ${type}
+		      </if>
+		      <if test="name != null and name!=''" >
+		        	and t.name like concat(concat('%',#{name}),'%')
+		      </if>
+		      <if test="authorizeFlag == 0">
+		      		and a.interfaceid is null
+		      </if>
+		      <if test="authorizeFlag == 1">
+		      		and a.interfaceid is not null
+		      </if>
+		</where>
+  </select>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_ip_app
+    where appid = #{appid,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from t_ip_app
+    where appid = #{appid,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.stech.tcip.sys.pojo.App" >
+    insert into t_ip_app (appid, appname)
+    values (#{appid,jdbcType=VARCHAR}, #{appname,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.stech.tcip.sys.pojo.App" >
+    insert into t_ip_app
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="appid != null" >
+        appid,
+      </if>
+      <if test="appname != null" >
+        appname,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="appid != null" >
+        #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="appname != null" >
+        #{appname,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.stech.tcip.sys.pojo.App" >
+    update t_ip_app
+    <set >
+      <if test="appname != null" >
+        appname = #{appname,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where appid = #{appid,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.stech.tcip.sys.pojo.App" >
+    update t_ip_app
+    set appname = #{appname,jdbcType=VARCHAR}
+    where appid = #{appid,jdbcType=VARCHAR}
+  </update>
+</mapper>

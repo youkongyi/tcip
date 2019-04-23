@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.sys.dao.AppInterfaceMapper" >
+  <resultMap id="BaseResultMap" type="com.stech.tcip.sys.pojo.AppInterfaceKey" >
+    <id column="appid" property="appid" jdbcType="VARCHAR" />
+    <id column="interfaceid" property="interfaceid" jdbcType="INTEGER" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" parameterType="com.stech.tcip.sys.pojo.AppInterfaceKey" >
+    delete from t_ip_appinterface
+    where appid = #{appid,jdbcType=VARCHAR}
+      and interfaceid = #{interfaceid,jdbcType=VARCHAR}
+  </delete>
+  
+  <select id="hasAccessFlag" resultType="java.lang.Integer" parameterType="com.stech.tcip.sys.dto.AppAuthorizes">
+	  	SELECT
+			count(1) flag
+		FROM
+			t_ip_appinterface a
+		LEFT JOIN t_ip_interservice b ON a.interfaceid = b.id
+		WHERE
+			a.appid = #{appId,jdbcType=VARCHAR}
+		and TRIM(b.tcipcode) = #{tcipcode,jdbcType=VARCHAR}
+  </select>
+  
+  <insert id="insert" parameterType="com.stech.tcip.sys.pojo.AppInterfaceKey" >
+    insert into t_ip_appinterface (appid, interfaceid)
+    values (#{appid,jdbcType=VARCHAR}, #{interfaceid,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" parameterType="com.stech.tcip.sys.pojo.AppInterfaceKey" >
+    insert into t_ip_appinterface
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="appid != null" >
+        appid,
+      </if>
+      <if test="interfaceid != null" >
+        interfaceid,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="appid != null" >
+        #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="interfaceid != null" >
+        #{interfaceid,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+</mapper>

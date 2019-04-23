@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd 
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd 
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<context:component-scan base-package="com.stech.tcip" />
+	<!-- 加载基础配置文件 -->
+	<context:property-placeholder location="/WEB-INF/config/*.properties"
+		ignore-unresolvable="true" />
+<!-- 	<context:property-placeholder location="/WEB-INF/config/memcached.properties" -->
+<!-- 		ignore-unresolvable="true" /> -->
+
+	<!-- 配置datasource -->
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource"
+		destroy-method="close">
+		<!-- <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource" 
+			destroy-method="close"> -->
+		<!-- 基本属性 url、user、password -->
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+	<!-- 配置工厂 ,整合mybatis配置文件 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="/WEB-INF/config/spring-mybatis.xml" />
+		<property name="mapperLocations" value="classpath:com/stech/tcip/*/mapping/*.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.stech.tcip.*.dao" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+
+	<!-- 配置事务 -->
+	<!-- 配置事务管理器 -->
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="query*" read-only="true" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:pointcut expression="execution(* com.stech.tcip.*.services..*.*(..))"
+			id="pointcut" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="pointcut" />
+	</aop:config>
+
+	<!-- Memcached 配置 -->
+	<bean name="memcachedClientBuilder" class="net.rubyeye.xmemcached.XMemcachedClientBuilder">
+		<!-- XMemcachedClientBuilder have two arguments.First is server list,and 
+			second is weights array. -->
+		<constructor-arg>
+			<list>
+				<bean class="java.net.InetSocketAddress">
+					<constructor-arg value="${server1.memcached.host}" />
+					<constructor-arg value="${server1.memcached.port}" />
+				</bean>
+			</list>
+		</constructor-arg>
+		<constructor-arg>
+			<list>
+				<value>${server1.memcached.weight}</value>
+			</list>
+		</constructor-arg>
+		<property name="connectionPoolSize" value="${memcached.connectionPoolSize}" />
+		<property name="failureMode" value="${memcached.failureMode}"></property>
+		<property name="commandFactory">
+			<bean class="net.rubyeye.xmemcached.command.TextCommandFactory"></bean>
+		</property>
+		<property name="sessionLocator">
+			<bean class="net.rubyeye.xmemcached.impl.KetamaMemcachedSessionLocator"></bean>
+		</property>
+		<property name="transcoder">
+			<bean class="net.rubyeye.xmemcached.transcoders.SerializingTranscoder" />
+		</property>
+	</bean>
+	<!-- Use factory bean to build memcached client -->
+	<bean name="memcachedClient" factory-bean="memcachedClientBuilder" factory-method="build" destroy-method="shutdown" />
+	
+	<!-- 定时任务注册 -->
+	<bean id="scheduleFactory" class="com.stech.tcip.schedule.util.ScheduleFactory"/>
+	<!-- 定时任务开启 -->
+	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" >
+		<property name="jobFactory" ref="scheduleFactory" />
+		<property name="triggers" ref="billsCheckJobTrigger"/>
+	</bean>
+	<bean id="scheduleServiceImpl"  class="com.stech.tcip.schedule.services.impl.ScheduleServiceImpl"/>
+	<!-- 项目启动时开启定时任务 -->
+	<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">  
+		<property name="targetObject" ref="scheduleServiceImpl"/>  
+	    <property name="targetMethod" value="initSchedule"/> 
+	    <!--默认允许并发执行，设置为false 防止并发执行 发生死锁问题 --> 
+	    <property name="concurrent" value="false"/>  
+	</bean>
+	<!-- 配置任务的时间/周期 -->
+	<!--<bean id="billsCheckJobTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		 装载任务
+		<property name="jobDetail" ref="jobDetail"/>
+		cron表达式 每5分钟执行一次 
+		<property name="cronExpression" value="0/50 * * * * ?"/>
+		 启动延迟 单位/毫秒 
+		<property name="startDelay" value="3000"/>
+	</bean> -->
+	<!-- 配置任务次数 -->
+	<bean id="billsCheckJobTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerFactoryBean">
+		<!-- 装载任务 -->
+		<property name="jobDetail" ref="jobDetail" />
+		<!-- 启动延迟 单位/毫秒 -->
+		<property name="startDelay" value="3000" />
+		<!-- 重复次数 -->
+		<property name="repeatCount" value="0" />
+	</bean>
+	
+
+</beans>

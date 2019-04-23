@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.schedule.dao.WithholdScheduleMapper" >
+	<!-- 数据返回对象(应用权限) -->
+	<resultMap id="withholdSchedule" type="com.stech.tcip.schedule.dto.WithholdSchedule" >
+	    <result column="appid" property="appid"/>
+	    <result column="url" property="url"/>
+        <result column="org_code" property="orgcode"/>
+	    <result column="dataorgid" property="dataorgid"/>
+	    <result column="state" property="state"/>
+	    <result column="tciscode" property="messageid"/>
+	</resultMap>
+   
+   <resultMap id="bankSchedule" type="com.stech.tcip.schedule.dto.BankSchedule" >
+	    <result column="id" property="id"/>
+	    <result column="schedule_id" property="scheduleId"/>
+	    <result column="dataorgid" property="dataorgid"/>
+	    <result column="org_code" property="orgCode"/>
+	    <result column="bank_code" property="bankCode"/>
+	    <result column="flow_no" property="flowNo"/>
+        <result column="file_name_input" property="fileNameInput"/>
+	    <result column="file_name_back" property="fileNameBack"/>
+	    <result column="file_input_size" property="fileInputSize"/>
+	    <result column="file_back_size" property="fileBackSize"/>
+	    <result column="create_date" property="createDate"/>
+	    <result column="back_date" property="backDate"/>
+	    <result column="status" property="stastus"/>
+	</resultMap>
+  
+    <select id="queryWithholdScheduleTask" resultMap="withholdSchedule" parameterType="com.stech.tcip.schedule.dto.ScheduleDTO" >
+	   SELECT
+			t2.url as 'url',
+			t2.appid as 'appid'
+		FROM
+			t_ip_orginfo t
+			INNER JOIN t_ip_accesstoken t2 ON t.dataorgid=t2.dataorgid
+			INNER JOIN t_ip_org_schedule t3 ON t3.org_id=t.id 
+		WHERE
+			t3.schedule_id=#{id}
+	     	AND t2.dataorgid=#{dataorgid}
+	    	AND t2.orgcode=#{orgCode}
+    </select> 
+    
+    <insert id="insertBankSchedule"  parameterType="com.stech.tcip.schedule.dto.BankSchedule" >
+	    INSERT INTO t_ip_bankschedule
+	    <trim prefix="(" suffix=")" suffixOverrides="," >
+	        id,
+	        schedule_id,
+	        dataorgid,
+	        org_code,
+	      <if test="fileNameInput != null" >
+	        file_name_input,
+	      </if>
+	      <if test="fileNameBack != null" >
+	        file_name_back,
+	      </if>
+	      <if test="fileInputSize != null" >
+	        file_input_size,
+	      </if>
+	        create_date,
+	      <if test="flowNo != null" >
+	        flow_no,
+	      </if>
+	        bank_code
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides="," >
+	        #{id},
+	        #{scheduleId},
+	        #{dataorgid},
+	        #{orgCode},
+	      <if test="fileNameInput != null" >
+	        #{fileNameInput},
+	      </if>
+	      <if test="fileNameBack != null" >
+	        #{fileNameBack},
+	      </if>
+	      <if test="fileInputSize != null" >
+	        #{fileInputSize},
+	      </if>
+	      sysdate(),
+	      <if test="flowNo != null" >
+	         #{flowNo},
+	      </if>
+	         #{bankCode}
+	    </trim>
+    </insert>
+    
+    <select id="queryBankFileName" resultMap="bankSchedule" parameterType="com.stech.tcip.schedule.dto.ScheduleDTO">
+    	SELECT
+			t.id AS 'id',
+			t.file_name_back AS 'fileNameBack' 
+		FROM
+			t_ip_bankschedule t
+		WHERE
+			t.dataorgid=#{dataorgid}
+			AND t.org_code=#{orgCode}
+			AND t.bank_code=#{bankCode}
+			AND t.STATUS='0' 
+		ORDER BY
+			t.create_date DESC
+    </select>
+    
+    <update id="updateBankSchedule" parameterType="com.stech.tcip.schedule.dto.BankSchedule">
+    	UPDATE
+	 		t_ip_bankschedule
+ 		<set >
+	      <if test="fileNameInput != null" >
+	        file_name_input=#{fileNameInput},
+	      </if>
+	      <if test="fileNameBack != null" >
+	        file_name_back=#{fileNameBack},
+	       </if>
+	      <if test="fileInputSize != null" >
+	        file_input_size=#{fileInputSize},
+	      </if>
+	      <if test="fileBackSize != null" >
+	        file_back_size=#{fileBackSize},
+	      </if>
+	        back_date=sysdate(),
+	      <if test="flowNo != null" >
+	        flow_no=#{flowNo}
+	      </if>
+	        status='1'
+    	</set>
+    	WHERE 
+    		id=#{id}
+    </update>
+</mapper>

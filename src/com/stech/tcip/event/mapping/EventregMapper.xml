@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.event.dao.EventregMapper" >
+  <resultMap id="BaseResultMap" type="com.stech.tcip.event.pojo.Eventreg" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="messagecode" property="messagecode" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="token" property="token" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+    <result column="appid" property="appid" jdbcType="VARCHAR" />
+    <result column="cancelflag" property="cancelflag" jdbcType="INTEGER" />
+    <result column="createtime" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="lastmodifytime" property="lastmodifytime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, messagecode, url, token, type, appid, cancelflag, createtime, lastmodifytime
+  </sql>
+  
+  <!-- pusheventList  查询已经注册事件情况-->
+   <select id="pusheventList" resultMap="BaseResultMap" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+    select 
+   		id, messagecode, url, token, type, appid, cancelflag, 
+   		DATE_FORMAT(createtime,'%Y-%m-%d %h:%i %s') createtime,
+   		DATE_FORMAT(lastmodifytime,'%Y-%m-%d %h:%i %s') lastmodifytime
+    from t_ip_eventreg
+    <where>
+	   	  <if test="messagecode != null" >
+	       	 and messagecode = #{messagecode,jdbcType=VARCHAR}
+	      </if>
+	      <if test="appid != null" >
+	        and appid = #{appid,jdbcType=VARCHAR}
+	      </if>
+	      <if test="cancelflag != null" >
+	        and cancelflag = #{cancelflag,jdbcType=INTEGER}
+	      </if>
+	       <if test="dataorgid != null" >
+	        and dataorgid = #{dataorgid,jdbcType=VARCHAR}
+	      </if>
+    </where>
+  </select>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_ip_eventreg
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_ip_eventreg
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+    insert into t_ip_eventreg (id, messagecode, url, 
+      token, type, appid, 
+      cancelflag, createtime, lastmodifytime, dataorgid
+      )
+    values (#{id,jdbcType=INTEGER}, #{messagecode,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR}, 
+      #{token,jdbcType=VARCHAR}, #{type,jdbcType=VARCHAR}, #{appid,jdbcType=VARCHAR}, 
+      #{cancelflag,jdbcType=INTEGER}, now(), #{lastmodifytime,jdbcType=TIMESTAMP}, #{dataorgid,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+    insert into t_ip_eventreg
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="messagecode != null" >
+        messagecode,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="token != null" >
+        token,
+      </if>
+      <if test="type != null" >
+        type,
+      </if>
+      <if test="appid != null" >
+        appid,
+      </if>
+      <if test="cancelflag != null" >
+        cancelflag,
+      </if>
+      <if test="createtime != null" >
+        createtime,
+      </if>
+      <if test="lastmodifytime != null" >
+        lastmodifytime,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="messagecode != null" >
+        #{messagecode,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null" >
+        #{token,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="appid != null" >
+        #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="cancelflag != null" >
+        #{cancelflag,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null" >
+        #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastmodifytime != null" >
+        #{lastmodifytime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+
+<!-- 事件取消 -->
+ <update id="eventCancel" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+       update t_ip_eventreg
+    set cancelflag = #{cancelflag,jdbcType=INTEGER},lastmodifytime=now()
+    where appid = #{appid,jdbcType=VARCHAR} 
+    	and messagecode = #{messagecode,jdbcType=VARCHAR}
+    	and dataorgid = #{dataorgid,jdbcType=VARCHAR}
+  </update>  
+  
+  <update id="updateByPrimaryKeySelective" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+    update t_ip_eventreg
+    <set >
+      <if test="messagecode != null" >
+        messagecode = #{messagecode,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null" >
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="token != null" >
+        token = #{token,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        type = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="appid != null" >
+        appid = #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="cancelflag != null" >
+        cancelflag = #{cancelflag,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null" >
+        createtime = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastmodifytime != null" >
+        lastmodifytime = #{lastmodifytime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.stech.tcip.event.pojo.Eventreg" >
+    update t_ip_eventreg
+    set messagecode = #{messagecode,jdbcType=VARCHAR},
+      url = #{url,jdbcType=VARCHAR},
+      token = #{token,jdbcType=VARCHAR},
+      type = #{type,jdbcType=VARCHAR},
+      appid = #{appid,jdbcType=VARCHAR},
+      cancelflag = #{cancelflag,jdbcType=INTEGER},
+      createtime = #{createtime,jdbcType=TIMESTAMP},
+      lastmodifytime = #{lastmodifytime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

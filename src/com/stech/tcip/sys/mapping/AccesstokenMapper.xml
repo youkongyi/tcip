@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.sys.dao.AccesstokenMapper" >
+  <resultMap id="BaseResultMap" type="com.stech.tcip.sys.pojo.Accesstoken" >
+    <id column="pkid" property="pkid" jdbcType="INTEGER" />
+    <result column="appid" property="appid" jdbcType="VARCHAR" />
+    <result column="orgcode" property="orgcode" jdbcType="VARCHAR" />
+    <result column="dataorgid" property="dataorgid" jdbcType="INTEGER" />
+    <result column="expiredate" property="expiredate" jdbcType="DATE" />
+    <result column="secret" property="secret" jdbcType="VARCHAR" />
+    <result column="accesstoken" property="accesstoken" jdbcType="VARCHAR" />
+    <result column="area" property="area" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="state" property="state" jdbcType="INTEGER" />
+    <result column="createTime" property="createtime" jdbcType="TIMESTAMP" />
+    <result column="createby" property="createby" jdbcType="VARCHAR" />
+    <result column="lastmodifytime" property="lastmodifytime" jdbcType="TIMESTAMP" />
+    <result column="modifyby" property="modifyby" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    pkid, appid, orgcode, dataorgid, expiredate, secret, accesstoken, state,area,url, createTime, createby, 
+    lastmodifytime, modifyby
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_ip_accesstoken
+    where pkid = #{pkid,jdbcType=INTEGER}
+  </select>
+  
+   <select id="selectUrlbyDataorgId" resultType="java.lang.String" parameterType="java.lang.String" >
+    	select DISTINCT t.url from t_ip_accesstoken t where t.dataorgid=#{dataorgid,jdbcType=INTEGER}
+  </select>
+  
+  <select id="selectAllAccesstokens" resultMap="BaseResultMap" parameterType="com.stech.tcip.sys.pojo.Accesstoken">
+	    select 
+	    <include refid="Base_Column_List" />
+	    from t_ip_accesstoken
+  </select>
+  
+  <select id="selectByToken" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from t_ip_accesstoken
+    where accessToken = #{accessToken,jdbcType=INTEGER}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from t_ip_accesstoken
+    where pkid = #{pkid,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.stech.tcip.sys.pojo.Accesstoken" >
+    insert into t_ip_accesstoken (pkid, appid, orgcode, dataorgid, 
+      expiredate, secret, accesstoken,area,url,
+      state, createTime, createby, 
+      lastmodifytime, modifyby)
+    values (#{pkid,jdbcType=INTEGER}, #{appid,jdbcType=VARCHAR}, #{orgcode,jdbcType=VARCHAR},  #{dataorgid,jdbcType=INTEGER}, 
+      #{expiredate,jdbcType=DATE}, #{secret,jdbcType=VARCHAR}, #{accesstoken,jdbcType=VARCHAR}, #{area,jdbcType=VARCHAR},#{url,jdbcType=VARCHAR},
+      #{state,jdbcType=INTEGER}, now(), #{createby,jdbcType=VARCHAR}, 
+      now(), #{modifyby,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.stech.tcip.sys.pojo.Accesstoken" >
+    insert into t_ip_accesstoken
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="pkid != null" >
+        pkid,
+      </if>
+      <if test="appid != null" >
+        appid,
+      </if>
+      <if test="dataorgid != null" >
+        dataorgid,
+      </if>
+      <if test="expiredate != null" >
+        expiredate,
+      </if>
+      <if test="secret != null" >
+        secret,
+      </if>
+      <if test="accesstoken != null" >
+        accesstoken,
+      </if>
+      <if test="state != null" >
+        state,
+      </if>
+      <if test="createtime != null" >
+        createTime,
+      </if>
+      <if test="createby != null" >
+        createby,
+      </if>
+      <if test="lastmodifytime != null" >
+        lastmodifytime,
+      </if>
+      <if test="modifyby != null" >
+        modifyby,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="pkid != null" >
+        #{pkid,jdbcType=INTEGER},
+      </if>
+      <if test="appid != null" >
+        #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="dataorgid != null" >
+        #{dataorgid,jdbcType=INTEGER},
+      </if>
+      <if test="expiredate != null" >
+        #{expiredate,jdbcType=DATE},
+      </if>
+      <if test="secret != null" >
+        #{secret,jdbcType=VARCHAR},
+      </if>
+      <if test="accesstoken != null" >
+        #{accesstoken,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null" >
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null" >
+        #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createby != null" >
+        #{createby,jdbcType=VARCHAR},
+      </if>
+      <if test="lastmodifytime != null" >
+        #{lastmodifytime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null" >
+        #{modifyby,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.stech.tcip.sys.pojo.Accesstoken" >
+    update t_ip_accesstoken
+    <set >
+      <if test="appid != null" >
+        appid = #{appid,jdbcType=VARCHAR},
+      </if>
+      <if test="orgcode != null" >
+        orgcode = #{orgcode,jdbcType=VARCHAR},
+      </if>
+      <if test="dataorgid != null" >
+        dataorgid = #{dataorgid,jdbcType=INTEGER},
+      </if>
+      <if test="expiredate != null" >
+        expiredate = #{expiredate,jdbcType=DATE},
+      </if>
+      <if test="secret != null" >
+        secret = #{secret,jdbcType=VARCHAR},
+      </if>
+      <if test="accesstoken != null" >
+        accesstoken = #{accesstoken,jdbcType=VARCHAR},
+      </if>
+      <if test="state != null" >
+        state = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null" >
+        createTime = #{createtime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createby != null" >
+        createby = #{createby,jdbcType=VARCHAR},
+      </if>
+      <if test="lastmodifytime != null" >
+        lastmodifytime = #{lastmodifytime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifyby != null" >
+        modifyby = #{modifyby,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where pkid = #{pkid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.stech.tcip.sys.pojo.Accesstoken" >
+    update t_ip_accesstoken
+    set appid = #{appid,jdbcType=VARCHAR},
+      orgcode = #{orgcode,jdbcType=INTEGER},
+      dataorgid = #{dataorgid,jdbcType=INTEGER},
+      expiredate = #{expiredate,jdbcType=DATE},
+      secret = #{secret,jdbcType=VARCHAR},
+      accesstoken = #{accesstoken,jdbcType=VARCHAR},
+      state = #{state,jdbcType=INTEGER},
+      createTime = #{createtime,jdbcType=TIMESTAMP},
+      createby = #{createby,jdbcType=VARCHAR},
+      lastmodifytime = #{lastmodifytime,jdbcType=TIMESTAMP},
+      modifyby = #{modifyby,jdbcType=VARCHAR}
+    where pkid = #{pkid,jdbcType=INTEGER}
+  </update>
+</mapper>

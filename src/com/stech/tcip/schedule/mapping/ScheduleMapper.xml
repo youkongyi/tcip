@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.stech.tcip.schedule.dao.ScheduleMapper" >
+	<!-- 数据返回对象(应用权限) -->
+	<resultMap id="scheduleTasks" type="com.stech.tcip.schedule.dto.ScheduleDTO" >
+	    <result column="id" property="id"/>
+	    <result column="name" property="name"/>
+        <result column="export_cron" property="exportCron"/>
+	    <result column="start_time" property="startTime"/>
+	    <result column="run_time" property="runTime"/>
+	    <result column="status" property="status"/>
+	    <result column="type" property="type"/>
+	    <result column="tcis_code" property="tcisCode"/>
+	    <result column="dataorgid" property="dataorgid"/>
+	    <result column="bank_code" property="bankCode"/>
+	    <result column="org_code" property="orgcode"/>
+	    <result column="repeat_count" property="repeatCount"/>
+	    <result column="create_userid" property="createUserId"/>
+	    <result column="org_name" property="orgName"/>
+	</resultMap>
+   
+  
+    <select id="queryScheduleTaskForList" resultMap="scheduleTasks" parameterType="com.stech.tcip.schedule.dto.ScheduleDTO" >
+	    SELECT
+			t.id as 'id',
+			t.bank_code as 'bankCode',
+			t.name as 'name',
+			t.export_cron as 'exportCron',
+			t.status as 'status',
+			t.type as 'type',
+			t.tcis_code as 'tcisCode',
+			t3.dataorgid as 'dataorgid',
+			t3.org_code as 'orgCode',
+			t3.org_name as 'orgName' 
+		FROM
+			t_ip_schedule t
+			INNER JOIN t_ip_org_schedule t2 ON t.id = t2.schedule_id
+			INNER JOIN t_ip_orginfo t3 ON t2.org_id = t3.id
+	    WHERE 1=1 
+	    <if test="status != null" >
+	    	AND t.status=#{status}
+	    </if>
+	    <if test="type != null" >
+	    	AND t.type=#{type}
+	    </if>
+	    <if test="dataorgid != null" >
+	    	AND t3.dataorgid=#{dataorgid}
+	    </if>
+	    <if test="orgCode != null" >
+	    	AND t3.org_code=#{orgCode}
+	    </if>
+	    <if test="tcisCode != null" >
+	    	AND t.tcis_code=#{tcisCode}
+	    </if>
+    </select>
+ 
+	<update id="updateScheduleTask" parameterType="com.stech.tcip.schedule.dto.ScheduleDTO">
+	 	UPDATE
+	 		t_ip_schedule
+ 		<set>
+ 		  <if test="name != null" >
+	        name=#{name},
+	      </if>
+	      <if test="exportCron != null" >
+	        export_cron=#{exportCron},
+	      </if>
+	      <if test="startTime != null" >
+	        start_time=sysdate(),
+	      </if>
+	      <if test="runTime != null" >
+	        run_time=sysdate(),
+	      </if>
+	      <if test="status != null" >
+	        status=#{status},
+	      </if>
+	      <if test="type != null" >
+	        type = #{type},
+	      </if>
+	     	repeat_count=repeat_count+1,
+    	</set>
+    	WHERE id=#{id}
+	</update>
+ 
+</mapper>

@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+encoding//WebRoot/WEB-INF/view/sys/app/app_authorizes.jsp=UTF-8
+encoding//WebRoot/css/cloud-admin.css=UTF-8
+encoding//sql/\u30104573\u3011\u524D\u7F6E\u673A\u914D\u7F6E\u811A\u672C.sql=GBK
+encoding//src/com/primeton/tcisapiwebserviceservice/TcisApiWebService.java=GBK
+encoding//src/com/primeton/tcisapiwebserviceservice/TcisApiWebServiceResponse.java=GBK
+encoding//src/com/stech/tcip/sys/util/PageBaseEntity.java=UTF-8
+encoding//src/com/stech/tcip/sys/util/PagedResult.java=UTF-8
+encoding/<project>=UTF-8
